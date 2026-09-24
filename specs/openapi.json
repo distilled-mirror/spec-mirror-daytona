@@ -2235,6 +2235,55 @@
         ]
       }
     },
+    "/organizations/{organizationId}/identity-providers/workos-sso-connections": {
+      "get": {
+        "operationId": "listWorkosSsoConnections",
+        "parameters": [
+          {
+            "description": "Organization ID",
+            "explode": false,
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkosSsoConnection"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "SSO connections as configured in the WorkOS Admin Portal; empty when none exist"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "oauth2": [
+              "openid",
+              "profile",
+              "email"
+            ]
+          }
+        ],
+        "summary": "List the SSO connections configured for the organization in WorkOS",
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
     "/organizations/{organizationId}/identity-providers": {
       "get": {
         "operationId": "listOrganizationIdentityProviders",
@@ -11933,6 +11982,67 @@
         },
         "required": [
           "link"
+        ],
+        "type": "object"
+      },
+      "WorkosSsoConnection": {
+        "example": {
+          "createdAt": "2000-01-23T04:56:07.000Z",
+          "name": "name",
+          "domains": [
+            "domains",
+            "domains"
+          ],
+          "id": "id",
+          "state": "active",
+          "connectionType": "OktaSAML",
+          "updatedAt": "2000-01-23T04:56:07.000Z"
+        },
+        "properties": {
+          "id": {
+            "description": "WorkOS connection ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Connection name as set in the WorkOS Admin Portal",
+            "type": "string"
+          },
+          "connectionType": {
+            "description": "WorkOS connection type, e.g. OktaSAML, AzureSAML, GenericOIDC",
+            "example": "OktaSAML",
+            "type": "string"
+          },
+          "state": {
+            "description": "WorkOS connection state: active means logins work; draft and requires_type mean setup is incomplete",
+            "example": "active",
+            "type": "string"
+          },
+          "domains": {
+            "description": "Email domains routed to this connection",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "description": "When the connection was created in WorkOS",
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "When the connection was last changed in WorkOS",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connectionType",
+          "createdAt",
+          "domains",
+          "id",
+          "name",
+          "state",
+          "updatedAt"
         ],
         "type": "object"
       },
