@@ -9879,6 +9879,25 @@
         ],
         "type": "object"
       },
+      "CliOidcConfig": {
+        "properties": {
+          "issuer": {
+            "description": "WorkOS issuer of the Daytona CLI application",
+            "example": "https://auth.example.com/user_management/client_123",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "WorkOS client ID of the Daytona CLI application",
+            "example": "client_123",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId",
+          "issuer"
+        ],
+        "type": "object"
+      },
       "OidcConfig": {
         "properties": {
           "issuer": {
@@ -9909,6 +9928,14 @@
             "description": "WorkOS \"Authentication API\" custom domain the dashboard's client-side SDK should call instead of api.workos.com, so the refresh-token cookie is first-party. Present only when the provider is workos and a custom domain is configured (WorkOS production environments only); absent means the SDK runs in devMode and keeps the refresh token in localStorage.",
             "example": "auth.example.com",
             "type": "string"
+          },
+          "cli": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CliOidcConfig"
+              }
+            ],
+            "description": "WorkOS application the Daytona CLI logs in through, configured apart from the dashboard's so CLI sessions can have their own lifetime. Present only when the provider is workos and a CLI application is configured; absent means the CLI uses the issuer and client ID above."
           }
         },
         "required": [
@@ -11040,6 +11067,7 @@
         "enum": [
           "H100",
           "H200",
+          "B300",
           "RTX-PRO-6000",
           "RTX-4090",
           "RTX-5090",
@@ -11049,6 +11077,7 @@
         "x-enum-varnames": [
           "H100",
           "H200",
+          "B300",
           "RTX_PRO_6000",
           "RTX_4090",
           "RTX_5090",
@@ -13058,6 +13087,7 @@
           "gpuType": [
             "H100"
           ],
+          "kvm": false,
           "networkAllowList": "192.168.1.0/16,10.0.0.0/24",
           "volumes": [
             {
@@ -13139,6 +13169,12 @@
           },
           "networkBlockAll": {
             "description": "Whether to block all network access for the sandbox",
+            "example": false,
+            "type": "boolean"
+          },
+          "kvm": {
+            "default": false,
+            "description": "Expose KVM (/dev/kvm) inside the sandbox via nested virtualization. linux-vm snapshots only. Requires the sandbox_kvm feature for the organization.",
             "example": false,
             "type": "boolean"
           },
@@ -13336,6 +13372,7 @@
           "updatedAt": "2024-10-01T12:00:00.000Z",
           "sandboxClass": "linux-vm",
           "desiredState": "destroyed",
+          "kvm": false,
           "networkAllowList": "192.168.1.0/16,10.0.0.0/24",
           "spotEvictedAt": "2026-08-13T12:00:00.000Z",
           "volumes": [
@@ -13424,6 +13461,11 @@
           },
           "networkBlockAll": {
             "description": "Whether to block all network access for the sandbox",
+            "example": false,
+            "type": "boolean"
+          },
+          "kvm": {
+            "description": "Whether the sandbox exposes KVM (/dev/kvm) to its guest",
             "example": false,
             "type": "boolean"
           },
@@ -13642,6 +13684,7 @@
           "env",
           "gpu",
           "id",
+          "kvm",
           "labels",
           "memory",
           "name",
