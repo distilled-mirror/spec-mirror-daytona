@@ -640,6 +640,55 @@
         ]
       }
     },
+    "/organizations/{organizationId}/default-queue-timeout": {
+      "patch": {
+        "operationId": "updateOrganizationDefaultQueueTimeout",
+        "parameters": [
+          {
+            "description": "Organization ID",
+            "explode": false,
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDefaultQueueTimeout"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Default queue timeout updated successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "oauth2": [
+              "openid",
+              "profile",
+              "email"
+            ]
+          }
+        ],
+        "summary": "Set organization default queue timeout",
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
     "/organizations/{organizationId}": {
       "delete": {
         "operationId": "deleteOrganization",
@@ -3390,7 +3439,7 @@
         ]
       },
       "get": {
-        "description": "Sandboxes destroyed by spot preemption remain retrievable for 24 hours so `spotEvictedAt` can be read.",
+        "description": "Sandboxes destroyed by spot preemption remain retrievable for 24 hours so `spotEvictedAt` can be read. Sandboxes destroyed by queue timeout remain retrievable for 24 hours so `queueTimedOutAt` can be read.",
         "operationId": "getSandbox",
         "parameters": [
           {
@@ -10789,6 +10838,15 @@
         ],
         "type": "object"
       },
+      "DirectorySyncStatus": {
+        "description": "Connection state of the WorkOS SCIM directory, as last reported by WorkOS (absent when no directory has ever reported in)",
+        "enum": [
+          "active",
+          "inactive",
+          "deleted"
+        ],
+        "type": "string"
+      },
       "OtelConfig": {
         "example": {
           "organizationId": "organizationId",
@@ -10826,36 +10884,40 @@
       "Organization": {
         "example": {
           "secretQuota": 5.637376656633329,
-          "sandboxCreateRateLimit": 3.616076749251911,
-          "sandboxLifecycleRateLimitTtlSeconds": 1.2315135367772556,
+          "sandboxCreateRateLimit": 2.027123023002322,
+          "sandboxLifecycleRateLimitTtlSeconds": 1.0246457001441578,
           "createdAt": "2000-01-23T04:56:07.000Z",
           "sandboxLimitedNetworkEgress": true,
           "suspendedUntil": "2000-01-23T04:56:07.000Z",
           "ssoEnabled": true,
+          "directorySyncStatusChangedAt": "2000-01-23T04:56:07.000Z",
           "previewWarningEnabled": true,
           "snapshotDeactivationTimeoutMinutes": 7.061401241503109,
           "otelConfig": "",
-          "authenticatedRateLimitTtlSeconds": 4.145608029883936,
+          "authenticatedRateLimitTtlSeconds": 7.386281948385884,
           "id": "id",
           "experimentalConfig": "{}",
           "updatedAt": "2000-01-23T04:56:07.000Z",
           "defaultRegionId": "defaultRegionId",
-          "sandboxCreateRateLimitTtlSeconds": 7.386281948385884,
+          "sandboxCreateRateLimitTtlSeconds": 1.2315135367772556,
           "suspensionReason": "suspensionReason",
-          "sandboxLifecycleRateLimit": 2.027123023002322,
+          "sandboxLifecycleRateLimit": 4.145608029883936,
           "suspendedAt": "2000-01-23T04:56:07.000Z",
           "personal": true,
           "suspensionCleanupGracePeriodHours": 0.8008281904610115,
           "maxSecretsPerSandbox": 2.3021358869347655,
-          "authenticatedRateLimit": 9.301444243932576,
+          "directorySyncStatus": "",
+          "authenticatedRateLimit": 3.616076749251911,
           "suspended": true,
+          "defaultQueueTimeout": 9,
           "maxCpuPerSandbox": 6.027456183070403,
           "scimEnabled": true,
           "maxDiskPerSandbox": 5.962133916683182,
           "createdBy": "createdBy",
           "workosOrgId": "workosOrgId",
           "name": "name",
-          "maxMemoryPerSandbox": 1.4658129805029452
+          "maxMemoryPerSandbox": 1.4658129805029452,
+          "directorySyncTokenRevokedAt": "2000-01-23T04:56:07.000Z"
         },
         "properties": {
           "id": {
@@ -10931,6 +10993,11 @@
             "description": "Time in minutes before an unused snapshot is deactivated",
             "type": "number"
           },
+          "defaultQueueTimeout": {
+            "description": "Default minutes to wait for runner assignment before cancelling sandbox creation. Applied when sandbox create omits queueTimeout. Null means no default.",
+            "nullable": true,
+            "type": "integer"
+          },
           "sandboxLimitedNetworkEgress": {
             "description": "Sandbox default network block all",
             "type": "boolean"
@@ -10953,6 +11020,24 @@
           },
           "workosOrgId": {
             "description": "ID of the WorkOS organization mirrored from this organization (absent for personal organizations, which are never mirrored)",
+            "type": "string"
+          },
+          "directorySyncStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DirectorySyncStatus"
+              }
+            ],
+            "description": "Connection state of the WorkOS SCIM directory, as last reported by WorkOS (absent when no directory has ever reported in)"
+          },
+          "directorySyncStatusChangedAt": {
+            "description": "When the directory sync status last changed",
+            "format": "date-time",
+            "type": "string"
+          },
+          "directorySyncTokenRevokedAt": {
+            "description": "When the directory bearer token was revoked; absent while a valid token exists. A revoked token stops provisioning even if the directory is still active.",
+            "format": "date-time",
             "type": "string"
           },
           "authenticatedRateLimit": {
@@ -11004,6 +11089,7 @@
           "authenticatedRateLimitTtlSeconds",
           "createdAt",
           "createdBy",
+          "defaultQueueTimeout",
           "experimentalConfig",
           "id",
           "maxCpuPerSandbox",
@@ -11045,6 +11131,23 @@
         },
         "required": [
           "defaultRegionId"
+        ],
+        "type": "object"
+      },
+      "UpdateOrganizationDefaultQueueTimeout": {
+        "example": {
+          "defaultQueueTimeout": 5
+        },
+        "properties": {
+          "defaultQueueTimeout": {
+            "description": "Default minutes to wait for runner assignment before cancelling sandbox creation. Null disables the default. A number must be a positive integer.",
+            "example": 5,
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "defaultQueueTimeout"
         ],
         "type": "object"
       },
@@ -12678,12 +12781,14 @@
           },
           "disk": 10,
           "autoDestroyAt": "2026-07-15T12:00:00.000Z",
+          "queueTimedOutAt": "2026-08-13T12:00:00.000Z",
           "spot": false,
           "name": "MySandbox",
           "backupState": "None",
           "user": "daytona",
           "autoArchiveInterval": 10080,
-          "snapshot": "daytonaio/sandbox:latest"
+          "snapshot": "daytonaio/sandbox:latest",
+          "queueTimeout": 5
         },
         "properties": {
           "id": {
@@ -12799,6 +12904,11 @@
             "example": "2026-08-13T12:00:00.000Z",
             "type": "string"
           },
+          "queueTimedOutAt": {
+            "description": "When this sandbox was destroyed because it waited too long for a runner. Set only for queue-timeout sandboxes, which stay retrievable by ID for 24 hours after the timeout.",
+            "example": "2026-08-13T12:00:00.000Z",
+            "type": "string"
+          },
           "gpuType": {
             "allOf": [
               {
@@ -12864,6 +12974,12 @@
             "description": "When the sandbox will be automatically destroyed, regardless of its state (only set when a TTL is configured)",
             "example": "2026-07-15T12:00:00.000Z",
             "type": "string"
+          },
+          "queueTimeout": {
+            "description": "Minutes to wait for runner assignment before cancelling sandbox creation. Null means the wait is unlimited.",
+            "example": 5,
+            "nullable": true,
+            "type": "integer"
           },
           "createdAt": {
             "description": "The creation timestamp of the sandbox",
@@ -12949,12 +13065,14 @@
               },
               "disk": 10,
               "autoDestroyAt": "2026-07-15T12:00:00.000Z",
+              "queueTimedOutAt": "2026-08-13T12:00:00.000Z",
               "spot": false,
               "name": "MySandbox",
               "backupState": "None",
               "user": "daytona",
               "autoArchiveInterval": 10080,
-              "snapshot": "daytonaio/sandbox:latest"
+              "snapshot": "daytonaio/sandbox:latest",
+              "queueTimeout": 5
             },
             {
               "memory": 4,
@@ -12989,12 +13107,14 @@
               },
               "disk": 10,
               "autoDestroyAt": "2026-07-15T12:00:00.000Z",
+              "queueTimedOutAt": "2026-08-13T12:00:00.000Z",
               "spot": false,
               "name": "MySandbox",
               "backupState": "None",
               "user": "daytona",
               "autoArchiveInterval": 10080,
-              "snapshot": "daytonaio/sandbox:latest"
+              "snapshot": "daytonaio/sandbox:latest",
+              "queueTimeout": 5
             }
           ]
         },
@@ -13124,7 +13244,8 @@
           "name": "MySandbox",
           "user": "daytona",
           "autoArchiveInterval": 10080,
-          "snapshot": "ubuntu-4vcpu-8ram-100gb"
+          "snapshot": "ubuntu-4vcpu-8ram-100gb",
+          "queueTimeout": 5
         },
         "properties": {
           "name": {
@@ -13264,6 +13385,11 @@
             "example": 1440,
             "type": "integer"
           },
+          "queueTimeout": {
+            "description": "Minutes to wait for runner assignment before cancelling sandbox creation. Applies only while the sandbox is unassigned in pending_build or pulling_snapshot. Only honored when default queue timeout is enabled for the organization. Omit to use the organization default; null/omit with no organization default leaves the wait unlimited. Must be a positive integer.",
+            "example": 5,
+            "type": "integer"
+          },
           "volumes": {
             "description": "Array of volumes to attach to the sandbox",
             "items": {
@@ -13401,12 +13527,14 @@
           "target": "local",
           "disk": 10,
           "autoDestroyAt": "2026-07-15T12:00:00.000Z",
+          "queueTimedOutAt": "2026-08-13T12:00:00.000Z",
           "spot": false,
           "name": "MySandbox",
           "backupState": "None",
           "user": "daytona",
           "autoArchiveInterval": 10080,
-          "snapshot": "daytonaio/sandbox:latest"
+          "snapshot": "daytonaio/sandbox:latest",
+          "queueTimeout": 5
         },
         "properties": {
           "id": {
@@ -13515,6 +13643,11 @@
             "example": "2026-08-13T12:00:00.000Z",
             "type": "string"
           },
+          "queueTimedOutAt": {
+            "description": "When this sandbox was destroyed because it waited too long for a runner. Set only for queue-timeout sandboxes, which stay retrievable by ID for 24 hours after the timeout.",
+            "example": "2026-08-13T12:00:00.000Z",
+            "type": "string"
+          },
           "gpuType": {
             "allOf": [
               {
@@ -13609,6 +13742,12 @@
             "description": "When the sandbox will be automatically destroyed, regardless of its state (only set when a TTL is configured)",
             "example": "2026-07-15T12:00:00.000Z",
             "type": "string"
+          },
+          "queueTimeout": {
+            "description": "Minutes to wait for runner assignment before cancelling sandbox creation. Null means the wait is unlimited.",
+            "example": 5,
+            "nullable": true,
+            "type": "integer"
           },
           "volumes": {
             "description": "Array of volumes attached to the sandbox",
@@ -16807,6 +16946,7 @@
                 "update_scim_enabled",
                 "update_otel_config",
                 "delete_otel_config",
+                "update_default_queue_timeout",
                 "create_ssh_access",
                 "revoke_ssh_access",
                 "recover",
@@ -16817,6 +16957,7 @@
                 "auto_archive",
                 "auto_delete",
                 "ttl_expire",
+                "queue_timeout_expire",
                 "spot_evict"
               ],
               "type": "string"
