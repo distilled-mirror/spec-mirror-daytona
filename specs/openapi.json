@@ -11155,14 +11155,12 @@
         "enum": [
           "linux-vm",
           "container",
-          "android",
           "windows"
         ],
         "type": "string",
         "x-enum-varnames": [
           "LINUX_VM",
           "CONTAINER",
-          "ANDROID",
           "WINDOWS"
         ]
       },
@@ -13784,7 +13782,6 @@
             "enum": [
               "linux-vm",
               "container",
-              "android",
               "windows"
             ],
             "example": "linux-vm",
@@ -13792,7 +13789,6 @@
             "x-enum-varnames": [
               "LINUX_VM",
               "CONTAINER",
-              "ANDROID",
               "WINDOWS"
             ]
           },
@@ -15391,7 +15387,6 @@
             "enum": [
               "linux-vm",
               "container",
-              "android",
               "windows"
             ],
             "example": "linux-vm",
@@ -15399,7 +15394,6 @@
             "x-enum-varnames": [
               "LINUX_VM",
               "CONTAINER",
-              "ANDROID",
               "WINDOWS"
             ]
           }
