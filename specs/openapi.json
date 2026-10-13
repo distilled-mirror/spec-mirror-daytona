@@ -8063,9 +8063,6 @@
               }
             },
             "description": "Shared GPU capacity grouped by GPU type."
-          },
-          "403": {
-            "description": "GPU capacity is not enabled for this organization."
           }
         },
         "security": [
