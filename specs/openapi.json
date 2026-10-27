@@ -3133,7 +3133,7 @@
             "name": "createdAtAfter",
             "required": false,
             "schema": {
-              "example": "2024-01-01T00:00:00.000Z",
+              "example": "2024-01-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             },
@@ -3146,7 +3146,7 @@
             "name": "createdAtBefore",
             "required": false,
             "schema": {
-              "example": "2024-12-31T23:59:59.000Z",
+              "example": "2024-12-31T23:59:59Z",
               "format": "date-time",
               "type": "string"
             },
@@ -3159,7 +3159,7 @@
             "name": "lastEventAfter",
             "required": false,
             "schema": {
-              "example": "2024-01-01T00:00:00.000Z",
+              "example": "2024-01-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             },
@@ -3172,7 +3172,7 @@
             "name": "lastEventBefore",
             "required": false,
             "schema": {
-              "example": "2024-12-31T23:59:59.000Z",
+              "example": "2024-12-31T23:59:59Z",
               "format": "date-time",
               "type": "string"
             },
@@ -3185,7 +3185,7 @@
             "name": "autoDestroyAtAfter",
             "required": false,
             "schema": {
-              "example": "2024-01-01T00:00:00.000Z",
+              "example": "2024-01-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             },
@@ -3198,7 +3198,7 @@
             "name": "autoDestroyAtBefore",
             "required": false,
             "schema": {
-              "example": "2024-12-31T23:59:59.000Z",
+              "example": "2024-12-31T23:59:59Z",
               "format": "date-time",
               "type": "string"
             },
@@ -5532,7 +5532,7 @@
             "style": "simple"
           },
           {
-            "description": "Expiration time in minutes (default: 60)",
+            "description": "Expiration time in minutes (default: 60, maximum: 1440)",
             "explode": true,
             "in": "query",
             "name": "expiresInMinutes",
@@ -7762,6 +7762,66 @@
         ]
       }
     },
+    "/jobs/{jobId}/registry-mtls/{registryId}": {
+      "post": {
+        "operationId": "getJobRegistryMtlsCredentials",
+        "parameters": [
+          {
+            "description": "ID of the job",
+            "explode": false,
+            "in": "path",
+            "name": "jobId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple"
+          },
+          {
+            "description": "Registry credential reference from the job payload",
+            "explode": false,
+            "in": "path",
+            "name": "registryId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryMtlsCredentialsDto"
+                }
+              }
+            },
+            "description": "Ephemeral registry mTLS credentials"
+          },
+          "404": {
+            "description": "Registry credentials not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "oauth2": [
+              "openid",
+              "profile",
+              "email"
+            ]
+          }
+        ],
+        "summary": "Redeem registry mTLS credentials for an active job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
     "/jobs/{jobId}/status": {
       "post": {
         "operationId": "updateJobStatus",
@@ -9398,6 +9458,17 @@
               "type": "string"
             },
             "style": "simple"
+          },
+          {
+            "description": "Region the build context will be used in. When that region has its own build-context bucket, the returned credentials target it; otherwise they target the Daytona-hosted bucket.",
+            "explode": true,
+            "in": "query",
+            "name": "regionId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -10084,6 +10155,7 @@
             "forcedFeatureFlags"
           ],
           "sshGatewayPort": 22,
+          "v2DashboardUrl": "https://app.daytona.com",
           "sshGatewayHostKeys": [
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIBh7nbXJuVs1AkREaeJsOxlKD219FLKyrf37BmRKq8A"
           ],
@@ -10222,6 +10294,11 @@
             "example": "https://analytics.example.com",
             "type": "string"
           },
+          "v2DashboardUrl": {
+            "description": "Base URL of the new Daytona dashboard. The dashboard links to it, with the selected organization id appended, from its \"Switch to the new Daytona\" entry point when that is enabled for the organization. Absent when the deployment does not advertise one.",
+            "example": "https://app.daytona.com",
+            "type": "string"
+          },
           "stripePublishableKey": {
             "description": "Stripe publishable key for client-side Stripe.js",
             "example": "pk_live_...",
@@ -10298,7 +10375,7 @@
             "write:registries"
           ],
           "name": "My API Key",
-          "expiresAt": "2025-06-09T12:00:00.000Z"
+          "expiresAt": "2025-06-09T12:00:00Z"
         },
         "properties": {
           "name": {
@@ -10361,7 +10438,7 @@
           },
           "expiresAt": {
             "description": "When the API key expires",
-            "example": "2025-06-09T12:00:00.000Z",
+            "example": "2025-06-09T12:00:00Z",
             "format": "date-time",
             "nullable": true,
             "type": "string"
@@ -10375,14 +10452,14 @@
       },
       "ApiKeyResponse": {
         "example": {
-          "createdAt": "2024-03-14T12:00:00.000Z",
+          "createdAt": "2024-03-14T12:00:00Z",
           "permissions": [
             "write:registries",
             "write:registries"
           ],
           "name": "My API Key",
           "value": "bb_sk_1234567890abcdef",
-          "expiresAt": "2025-06-09T12:00:00.000Z"
+          "expiresAt": "2025-06-09T12:00:00Z"
         },
         "properties": {
           "name": {
@@ -10397,7 +10474,7 @@
           },
           "createdAt": {
             "description": "When the API key was created",
-            "example": "2024-03-14T12:00:00.000Z",
+            "example": "2024-03-14T12:00:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -10456,7 +10533,7 @@
           },
           "expiresAt": {
             "description": "When the API key expires",
-            "example": "2025-06-09T12:00:00.000Z",
+            "example": "2025-06-09T12:00:00Z",
             "format": "date-time",
             "nullable": true,
             "type": "string"
@@ -10474,8 +10551,8 @@
       "ApiKeyList": {
         "example": {
           "organizationId": "123e4567-e89b-12d3-a456-426614174000",
-          "createdAt": "2024-03-14T12:00:00.000Z",
-          "lastUsedAt": "2024-03-14T12:00:00.000Z",
+          "createdAt": "2024-03-14T12:00:00Z",
+          "lastUsedAt": "2024-03-14T12:00:00Z",
           "permissions": [
             "write:registries",
             "write:registries"
@@ -10483,7 +10560,7 @@
           "name": "My API Key",
           "value": "bb_********************def",
           "userId": "123",
-          "expiresAt": "2024-03-14T12:00:00.000Z"
+          "expiresAt": "2024-03-14T12:00:00Z"
         },
         "properties": {
           "name": {
@@ -10498,7 +10575,7 @@
           },
           "createdAt": {
             "description": "When the API key was created",
-            "example": "2024-03-14T12:00:00.000Z",
+            "example": "2024-03-14T12:00:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -10557,14 +10634,14 @@
           },
           "lastUsedAt": {
             "description": "When the API key was last used",
-            "example": "2024-03-14T12:00:00.000Z",
+            "example": "2024-03-14T12:00:00Z",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "expiresAt": {
             "description": "When the API key expires",
-            "example": "2024-03-14T12:00:00.000Z",
+            "example": "2024-03-14T12:00:00Z",
             "format": "date-time",
             "nullable": true,
             "type": "string"
@@ -10593,7 +10670,7 @@
       },
       "OrganizationRole": {
         "example": {
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "permissions": [
             "write:registries",
             "write:registries"
@@ -10602,7 +10679,7 @@
           "isGlobal": true,
           "description": "description",
           "id": "id",
-          "updatedAt": "2000-01-23T04:56:07.000Z"
+          "updatedAt": "2000-01-23T04:56:07.000+00:00"
         },
         "properties": {
           "id": {
@@ -10699,13 +10776,13 @@
       "OrganizationInvitation": {
         "example": {
           "organizationId": "organizationId",
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "invitedBy": "invitedBy",
           "role": "owner",
           "organizationName": "organizationName",
           "assignedRoles": [
             {
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "permissions": [
                 "write:registries",
                 "write:registries"
@@ -10714,10 +10791,10 @@
               "isGlobal": true,
               "description": "description",
               "id": "id",
-              "updatedAt": "2000-01-23T04:56:07.000Z"
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
             },
             {
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "permissions": [
                 "write:registries",
                 "write:registries"
@@ -10726,14 +10803,14 @@
               "isGlobal": true,
               "description": "description",
               "id": "id",
-              "updatedAt": "2000-01-23T04:56:07.000Z"
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
             }
           ],
           "id": "id",
           "email": "email",
-          "expiresAt": "2000-01-23T04:56:07.000Z",
+          "expiresAt": "2000-01-23T04:56:07.000+00:00",
           "status": "pending",
-          "updatedAt": "2000-01-23T04:56:07.000Z"
+          "updatedAt": "2000-01-23T04:56:07.000+00:00"
         },
         "properties": {
           "id": {
@@ -10883,23 +10960,23 @@
           "secretQuota": 5.637376656633329,
           "sandboxCreateRateLimit": 2.027123023002322,
           "sandboxLifecycleRateLimitTtlSeconds": 1.0246457001441578,
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "sandboxLimitedNetworkEgress": true,
-          "suspendedUntil": "2000-01-23T04:56:07.000Z",
+          "suspendedUntil": "2000-01-23T04:56:07.000+00:00",
           "ssoEnabled": true,
-          "directorySyncStatusChangedAt": "2000-01-23T04:56:07.000Z",
+          "directorySyncStatusChangedAt": "2000-01-23T04:56:07.000+00:00",
           "previewWarningEnabled": true,
           "snapshotDeactivationTimeoutMinutes": 7.061401241503109,
           "otelConfig": "",
           "authenticatedRateLimitTtlSeconds": 7.386281948385884,
           "id": "id",
           "experimentalConfig": "{}",
-          "updatedAt": "2000-01-23T04:56:07.000Z",
+          "updatedAt": "2000-01-23T04:56:07.000+00:00",
           "defaultRegionId": "defaultRegionId",
           "sandboxCreateRateLimitTtlSeconds": 1.2315135367772556,
           "suspensionReason": "suspensionReason",
           "sandboxLifecycleRateLimit": 4.145608029883936,
-          "suspendedAt": "2000-01-23T04:56:07.000Z",
+          "suspendedAt": "2000-01-23T04:56:07.000+00:00",
           "personal": true,
           "suspensionCleanupGracePeriodHours": 0.8008281904610115,
           "maxSecretsPerSandbox": 2.3021358869347655,
@@ -10914,7 +10991,7 @@
           "workosOrgId": "workosOrgId",
           "name": "name",
           "maxMemoryPerSandbox": 1.4658129805029452,
-          "directorySyncTokenRevokedAt": "2000-01-23T04:56:07.000Z"
+          "directorySyncTokenRevokedAt": "2000-01-23T04:56:07.000+00:00"
         },
         "properties": {
           "id": {
@@ -11165,6 +11242,7 @@
         "enum": [
           "H100",
           "H200",
+          "B200",
           "B300",
           "RTX-PRO-6000",
           "RTX-4090",
@@ -11175,6 +11253,7 @@
         "x-enum-varnames": [
           "H100",
           "H200",
+          "B200",
           "B300",
           "RTX_PRO_6000",
           "RTX_4090",
@@ -11608,11 +11687,11 @@
       "OrganizationUser": {
         "example": {
           "organizationId": "organizationId",
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "role": "owner",
           "assignedRoles": [
             {
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "permissions": [
                 "write:registries",
                 "write:registries"
@@ -11621,10 +11700,10 @@
               "isGlobal": true,
               "description": "description",
               "id": "id",
-              "updatedAt": "2000-01-23T04:56:07.000Z"
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
             },
             {
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "permissions": [
                 "write:registries",
                 "write:registries"
@@ -11633,13 +11712,13 @@
               "isGlobal": true,
               "description": "description",
               "id": "id",
-              "updatedAt": "2000-01-23T04:56:07.000Z"
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
             }
           ],
           "name": "name",
           "userId": "userId",
           "email": "email",
-          "updatedAt": "2000-01-23T04:56:07.000Z"
+          "updatedAt": "2000-01-23T04:56:07.000+00:00"
         },
         "properties": {
           "userId": {
@@ -11739,7 +11818,7 @@
             "assignedRoleIds"
           ],
           "email": "mail@example.com",
-          "expiresAt": "2021-12-31T23:59:59.000Z"
+          "expiresAt": "2021-12-31T23:59:59Z"
         },
         "properties": {
           "email": {
@@ -11768,7 +11847,7 @@
           },
           "expiresAt": {
             "description": "Expiration date of the invitation",
-            "example": "2021-12-31T23:59:59.000Z",
+            "example": "2021-12-31T23:59:59Z",
             "format": "date-time",
             "type": "string"
           }
@@ -11787,7 +11866,7 @@
             "assignedRoleIds",
             "assignedRoleIds"
           ],
-          "expiresAt": "2021-12-31T23:59:59.000Z"
+          "expiresAt": "2021-12-31T23:59:59Z"
         },
         "properties": {
           "role": {
@@ -11807,7 +11886,7 @@
           },
           "expiresAt": {
             "description": "Expiration date of the invitation",
-            "example": "2021-12-31T23:59:59.000Z",
+            "example": "2021-12-31T23:59:59Z",
             "format": "date-time",
             "type": "string"
           }
@@ -11829,14 +11908,17 @@
       },
       "Region": {
         "example": {
-          "organizationId": "123e4567-e89b-12d3-a456-426614174000",
           "otelEndpoint": "https://otel-collector.example.com:4318",
+          "buildContextBucketRegion": "us-east-1",
+          "buildContextRoleArn": "arn:aws:iam::123456789012:role/daytona-build-context",
+          "proxyUrl": "https://proxy.example.com",
+          "sshGatewayUrl": "http://ssh-gateway.example.com",
+          "organizationId": "123e4567-e89b-12d3-a456-426614174000",
           "createdAt": "2023-01-01T00:00:00.000Z",
           "snapshotManagerUrl": "http://snapshot-manager.example.com",
           "regionType": "shared",
-          "proxyUrl": "https://proxy.example.com",
+          "buildContextBucket": "my-org-daytona-region-us",
           "name": "us-east-1",
-          "sshGatewayUrl": "http://ssh-gateway.example.com",
           "id": "123456789012",
           "updatedAt": "2023-01-01T00:00:00.000Z"
         },
@@ -11899,6 +11981,24 @@
             "example": "https://otel-collector.example.com:4318",
             "nullable": true,
             "type": "string"
+          },
+          "buildContextBucket": {
+            "description": "S3 bucket in your AWS account that declarative-build context is uploaded to for this region. Requires buildContextBucketRegion and buildContextRoleArn.",
+            "example": "my-org-daytona-region-us",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextBucketRegion": {
+            "description": "AWS region of buildContextBucket (standard aws partition only)",
+            "example": "us-east-1",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextRoleArn": {
+            "description": "IAM role Daytona assumes (with your organization ID as ExternalId) to issue upload credentials for buildContextBucket",
+            "example": "arn:aws:iam::123456789012:role/daytona-build-context",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
@@ -11914,6 +12014,9 @@
         "example": {
           "otelEndpoint": "https://otel-collector.example.com:4318",
           "snapshotManagerUrl": "https://snapshot-manager.example.com",
+          "buildContextBucketRegion": "us-east-1",
+          "buildContextRoleArn": "arn:aws:iam::123456789012:role/daytona-build-context",
+          "buildContextBucket": "my-org-daytona-region-us",
           "proxyUrl": "https://proxy.example.com",
           "name": "us-east-1",
           "sshGatewayUrl": "ssh://ssh-gateway.example.com"
@@ -11945,6 +12048,24 @@
           "otelEndpoint": {
             "description": "OTel collector endpoint for sandboxes created in this region. When set, sandbox OTel data is sent to this endpoint instead of the Daytona-hosted collector and will not be available in the Daytona analytics API or dashboard.",
             "example": "https://otel-collector.example.com:4318",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextBucket": {
+            "description": "S3 bucket in your AWS account that declarative-build context is uploaded to for this region. Requires buildContextBucketRegion and buildContextRoleArn.",
+            "example": "my-org-daytona-region-us",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextBucketRegion": {
+            "description": "AWS region of buildContextBucket (standard aws partition only)",
+            "example": "us-east-1",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextRoleArn": {
+            "description": "IAM role Daytona assumes (with your organization ID as ExternalId) to issue upload credentials for buildContextBucket",
+            "example": "arn:aws:iam::123456789012:role/daytona-build-context",
             "nullable": true,
             "type": "string"
           }
@@ -12017,6 +12138,9 @@
         "example": {
           "otelEndpoint": "https://otel-collector.example.com:4318",
           "snapshotManagerUrl": "https://snapshot-manager.example.com",
+          "buildContextBucketRegion": "us-east-1",
+          "buildContextRoleArn": "arn:aws:iam::123456789012:role/daytona-build-context",
+          "buildContextBucket": "my-org-daytona-region-us",
           "proxyUrl": "https://proxy.example.com",
           "sshGatewayUrl": "ssh://ssh-gateway.example.com"
         },
@@ -12042,6 +12166,24 @@
           "otelEndpoint": {
             "description": "OTel collector endpoint for sandboxes created in this region. When set, sandbox OTel data is sent to this endpoint instead of the Daytona-hosted collector and will not be available in the Daytona analytics API or dashboard.",
             "example": "https://otel-collector.example.com:4318",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextBucket": {
+            "description": "S3 bucket in your AWS account that declarative-build context is uploaded to for this region. Requires buildContextBucketRegion and buildContextRoleArn.",
+            "example": "my-org-daytona-region-us",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextBucketRegion": {
+            "description": "AWS region of buildContextBucket (standard aws partition only)",
+            "example": "us-east-1",
+            "nullable": true,
+            "type": "string"
+          },
+          "buildContextRoleArn": {
+            "description": "IAM role Daytona assumes (with your organization ID as ExternalId) to issue upload credentials for buildContextBucket",
+            "example": "arn:aws:iam::123456789012:role/daytona-build-context",
             "nullable": true,
             "type": "string"
           }
@@ -12114,7 +12256,7 @@
       },
       "WorkosSsoConnection": {
         "example": {
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "name": "name",
           "domains": [
             "domains",
@@ -12123,7 +12265,7 @@
           "id": "id",
           "state": "active",
           "connectionType": "OktaSAML",
-          "updatedAt": "2000-01-23T04:56:07.000Z"
+          "updatedAt": "2000-01-23T04:56:07.000+00:00"
         },
         "properties": {
           "id": {
@@ -12308,7 +12450,7 @@
       "IdentityProvider": {
         "example": {
           "organizationId": "123e4567-e89b-12d3-a456-426614174000",
-          "createdAt": "2025-01-01T00:00:00.000Z",
+          "createdAt": "2025-01-01T00:00:00Z",
           "trustEmailVerified": false,
           "defaultAssignedRoleIds": [
             "00000000-0000-0000-0000-000000000001"
@@ -12322,7 +12464,7 @@
           "id": "123e4567-e89b-12d3-a456-426614174000",
           "allowAnyDomain": false,
           "enabled": true,
-          "updatedAt": "2025-01-01T00:00:00.000Z"
+          "updatedAt": "2025-01-01T00:00:00Z"
         },
         "properties": {
           "id": {
@@ -12386,13 +12528,13 @@
           },
           "createdAt": {
             "description": "Creation timestamp",
-            "example": "2025-01-01T00:00:00.000Z",
+            "example": "2025-01-01T00:00:00Z",
             "format": "date-time",
             "type": "string"
           },
           "updatedAt": {
             "description": "Last update timestamp",
-            "example": "2025-01-01T00:00:00.000Z",
+            "example": "2025-01-01T00:00:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -12572,7 +12714,7 @@
       "User": {
         "example": {
           "emailVerified": true,
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "publicKeys": [
             {
               "name": "name",
@@ -12746,12 +12888,12 @@
         "example": {
           "memory": 4,
           "toolboxProxyUrl": "https://proxy.app.daytona.io/toolbox",
-          "lastActivityAt": "2024-10-01T12:00:00.000Z",
+          "lastActivityAt": "2024-10-01T12:00:00Z",
           "autoStopInterval": 30,
           "warmPoolId": "warmPoolId",
           "organizationId": "organization123",
           "autoPauseInterval": 60,
-          "createdAt": "2024-10-01T12:00:00.000Z",
+          "createdAt": "2024-10-01T12:00:00Z",
           "networkBlockAll": false,
           "autoDeleteInterval": 30,
           "domainAllowList": "example.com,*.daytona.io",
@@ -12762,7 +12904,7 @@
           "state": "creating",
           "sandboxClass": "linux-vm",
           "gpuType": "H100",
-          "updatedAt": "2024-10-01T12:00:00.000Z",
+          "updatedAt": "2024-10-01T12:00:00Z",
           "desiredState": "destroyed",
           "networkAllowList": "192.168.1.0/16,10.0.0.0/24",
           "spotEvictedAt": "2026-08-13T12:00:00.000Z",
@@ -12978,17 +13120,17 @@
           },
           "createdAt": {
             "description": "The creation timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "updatedAt": {
             "description": "The last update timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "lastActivityAt": {
             "description": "The last activity timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "daemonVersion": {
@@ -13030,12 +13172,12 @@
             {
               "memory": 4,
               "toolboxProxyUrl": "https://proxy.app.daytona.io/toolbox",
-              "lastActivityAt": "2024-10-01T12:00:00.000Z",
+              "lastActivityAt": "2024-10-01T12:00:00Z",
               "autoStopInterval": 30,
               "warmPoolId": "warmPoolId",
               "organizationId": "organization123",
               "autoPauseInterval": 60,
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "networkBlockAll": false,
               "autoDeleteInterval": 30,
               "domainAllowList": "example.com,*.daytona.io",
@@ -13046,7 +13188,7 @@
               "state": "creating",
               "sandboxClass": "linux-vm",
               "gpuType": "H100",
-              "updatedAt": "2024-10-01T12:00:00.000Z",
+              "updatedAt": "2024-10-01T12:00:00Z",
               "desiredState": "destroyed",
               "networkAllowList": "192.168.1.0/16,10.0.0.0/24",
               "spotEvictedAt": "2026-08-13T12:00:00.000Z",
@@ -13072,12 +13214,12 @@
             {
               "memory": 4,
               "toolboxProxyUrl": "https://proxy.app.daytona.io/toolbox",
-              "lastActivityAt": "2024-10-01T12:00:00.000Z",
+              "lastActivityAt": "2024-10-01T12:00:00Z",
               "autoStopInterval": 30,
               "warmPoolId": "warmPoolId",
               "organizationId": "organization123",
               "autoPauseInterval": 60,
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "networkBlockAll": false,
               "autoDeleteInterval": 30,
               "domainAllowList": "example.com,*.daytona.io",
@@ -13088,7 +13230,7 @@
               "state": "creating",
               "sandboxClass": "linux-vm",
               "gpuType": "H100",
-              "updatedAt": "2024-10-01T12:00:00.000Z",
+              "updatedAt": "2024-10-01T12:00:00Z",
               "desiredState": "destroyed",
               "networkAllowList": "192.168.1.0/16,10.0.0.0/24",
               "spotEvictedAt": "2026-08-13T12:00:00.000Z",
@@ -13473,13 +13615,13 @@
           "linkedSandboxId": "sandbox123",
           "buildInfo": "",
           "toolboxProxyUrl": "https://proxy.app.daytona.io/toolbox",
-          "lastActivityAt": "2024-10-01T12:00:00.000Z",
+          "lastActivityAt": "2024-10-01T12:00:00Z",
           "warmPoolId": "warmPoolId",
           "autoStopInterval": 30,
           "organizationId": "organization123",
           "otelEndpointOverride": "https://otel-collector.example.com:4318",
           "autoPauseInterval": 60,
-          "createdAt": "2024-10-01T12:00:00.000Z",
+          "createdAt": "2024-10-01T12:00:00Z",
           "networkBlockAll": false,
           "autoDeleteInterval": 30,
           "domainAllowList": "example.com,*.daytona.io",
@@ -13490,7 +13632,7 @@
           "id": "sandbox123",
           "state": "creating",
           "gpuType": "H100",
-          "updatedAt": "2024-10-01T12:00:00.000Z",
+          "updatedAt": "2024-10-01T12:00:00Z",
           "sandboxClass": "linux-vm",
           "desiredState": "destroyed",
           "kvm": false,
@@ -13515,7 +13657,7 @@
           },
           "gpu": 0,
           "daemonVersion": "1.0.0",
-          "backupCreatedAt": "2024-10-01T12:00:00.000Z",
+          "backupCreatedAt": "2024-10-01T12:00:00Z",
           "labels": {
             "daytona.io/public": "true"
           },
@@ -13523,6 +13665,7 @@
           "disk": 10,
           "autoDestroyAt": "2026-07-15T12:00:00.000Z",
           "queueTimedOutAt": "2026-08-13T12:00:00.000Z",
+          "networkPolicyError": "persist updated proxy policy binding: operation not permitted",
           "spot": false,
           "name": "MySandbox",
           "backupState": "None",
@@ -13685,6 +13828,11 @@
             "example": "The sandbox is not running",
             "type": "string"
           },
+          "networkPolicyError": {
+            "description": "Outcome of the runner's most recent network policy change: why the network settings fields (what was requested) are not what the runner enforces. Absent when the latest change was applied; a new request leaves it as it is until its own outcome is known.",
+            "example": "persist updated proxy policy binding: operation not permitted",
+            "type": "string"
+          },
           "recoverable": {
             "description": "Whether the sandbox error is recoverable.",
             "example": true,
@@ -13710,7 +13858,7 @@
           "backupCreatedAt": {
             "deprecated": true,
             "description": "The creation timestamp of the last backup",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "autoStopInterval": {
@@ -13761,17 +13909,17 @@
           },
           "createdAt": {
             "description": "The creation timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "updatedAt": {
             "description": "The last update timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "lastActivityAt": {
             "description": "The last activity timestamp of the sandbox",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "sandboxClass": {
@@ -14127,13 +14275,13 @@
       },
       "SshAccessDto": {
         "example": {
-          "createdAt": "2025-01-01T11:00:00.000Z",
+          "createdAt": "2025-01-01T11:00:00Z",
           "sshCommand": "ssh -p 2222 token@localhost",
           "sandboxId": "123e4567-e89b-12d3-a456-426614174000",
           "id": "123e4567-e89b-12d3-a456-426614174000",
-          "expiresAt": "2025-01-01T12:00:00.000Z",
+          "expiresAt": "2025-01-01T12:00:00Z",
           "token": "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-          "updatedAt": "2025-01-01T11:00:00.000Z"
+          "updatedAt": "2025-01-01T11:00:00Z"
         },
         "properties": {
           "id": {
@@ -14153,19 +14301,19 @@
           },
           "expiresAt": {
             "description": "When the SSH access expires",
-            "example": "2025-01-01T12:00:00.000Z",
+            "example": "2025-01-01T12:00:00Z",
             "format": "date-time",
             "type": "string"
           },
           "createdAt": {
             "description": "When the SSH access was created",
-            "example": "2025-01-01T11:00:00.000Z",
+            "example": "2025-01-01T11:00:00Z",
             "format": "date-time",
             "type": "string"
           },
           "updatedAt": {
             "description": "When the SSH access was last updated",
-            "example": "2025-01-01T11:00:00.000Z",
+            "example": "2025-01-01T11:00:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -14442,7 +14590,7 @@
           "availabilityScore": 85,
           "currentDiskUsagePercentage": 33.8,
           "currentCpuUsagePercentage": 45.6,
-          "createdAt": "2023-10-01T12:00:00.000Z",
+          "createdAt": "2023-10-01T12:00:00Z",
           "apiVersion": "0",
           "apiUrl": "https://api.runner1.example.com",
           "regionType": "shared",
@@ -14455,7 +14603,7 @@
           "gpuType": "gpuType",
           "sandboxClass": "linux-vm",
           "currentAllocatedCpu": 4000,
-          "updatedAt": "2023-10-01T12:00:00.000Z",
+          "updatedAt": "2023-10-01T12:00:00Z",
           "proxyUrl": "https://proxy.runner1.example.com",
           "cpu": 8,
           "gpu": 1,
@@ -14470,7 +14618,7 @@
           "name": "runner1",
           "runnerClass": "container",
           "region": "us",
-          "lastChecked": "2024-10-01T12:00:00.000Z"
+          "lastChecked": "2024-10-01T12:00:00Z"
         },
         "properties": {
           "id": {
@@ -14592,7 +14740,7 @@
           },
           "lastChecked": {
             "description": "The last time the runner was checked",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "unschedulable": {
@@ -14613,12 +14761,12 @@
           },
           "createdAt": {
             "description": "The creation timestamp of the runner",
-            "example": "2023-10-01T12:00:00.000Z",
+            "example": "2023-10-01T12:00:00Z",
             "type": "string"
           },
           "updatedAt": {
             "description": "The last update timestamp of the runner",
-            "example": "2023-10-01T12:00:00.000Z",
+            "example": "2023-10-01T12:00:00Z",
             "type": "string"
           },
           "version": {
@@ -14727,7 +14875,7 @@
           "availabilityScore": 85,
           "currentDiskUsagePercentage": 33.8,
           "currentCpuUsagePercentage": 45.6,
-          "createdAt": "2023-10-01T12:00:00.000Z",
+          "createdAt": "2023-10-01T12:00:00Z",
           "apiVersion": "0",
           "apiUrl": "https://api.runner1.example.com",
           "id": "runner123",
@@ -14739,7 +14887,7 @@
           "gpuType": "gpuType",
           "sandboxClass": "linux-vm",
           "currentAllocatedCpu": 4000,
-          "updatedAt": "2023-10-01T12:00:00.000Z",
+          "updatedAt": "2023-10-01T12:00:00Z",
           "proxyUrl": "https://proxy.runner1.example.com",
           "cpu": 8,
           "gpu": 1,
@@ -14754,7 +14902,7 @@
           "name": "runner1",
           "runnerClass": "container",
           "region": "us",
-          "lastChecked": "2024-10-01T12:00:00.000Z"
+          "lastChecked": "2024-10-01T12:00:00Z"
         },
         "properties": {
           "id": {
@@ -14876,7 +15024,7 @@
           },
           "lastChecked": {
             "description": "The last time the runner was checked",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "unschedulable": {
@@ -14897,12 +15045,12 @@
           },
           "createdAt": {
             "description": "The creation timestamp of the runner",
-            "example": "2023-10-01T12:00:00.000Z",
+            "example": "2023-10-01T12:00:00Z",
             "type": "string"
           },
           "updatedAt": {
             "description": "The last update timestamp of the runner",
-            "example": "2023-10-01T12:00:00.000Z",
+            "example": "2023-10-01T12:00:00Z",
             "type": "string"
           },
           "version": {
@@ -15256,12 +15404,12 @@
           "gpu": 1.4658129805029452,
           "organizationId": "organizationId",
           "general": true,
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "disk": 5.637376656633329,
           "ref": "daytonaio/sandbox:latest",
           "size": 0.8008281904610115,
           "mem": 5.962133916683182,
-          "lastUsedAt": "2000-01-23T04:56:07.000Z",
+          "lastUsedAt": "2000-01-23T04:56:07.000+00:00",
           "entrypoint": [
             "entrypoint",
             "entrypoint"
@@ -15273,7 +15421,7 @@
           "state": "",
           "initialRunnerId": "runner123",
           "gpuType": "H100",
-          "updatedAt": "2000-01-23T04:56:07.000Z",
+          "updatedAt": "2000-01-23T04:56:07.000+00:00",
           "sandboxClass": "linux-vm"
         },
         "properties": {
@@ -15431,12 +15579,12 @@
               "gpu": 1.4658129805029452,
               "organizationId": "organizationId",
               "general": true,
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "disk": 5.637376656633329,
               "ref": "daytonaio/sandbox:latest",
               "size": 0.8008281904610115,
               "mem": 5.962133916683182,
-              "lastUsedAt": "2000-01-23T04:56:07.000Z",
+              "lastUsedAt": "2000-01-23T04:56:07.000+00:00",
               "entrypoint": [
                 "entrypoint",
                 "entrypoint"
@@ -15448,7 +15596,7 @@
               "state": "",
               "initialRunnerId": "runner123",
               "gpuType": "H100",
-              "updatedAt": "2000-01-23T04:56:07.000Z",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00",
               "sandboxClass": "linux-vm"
             },
             {
@@ -15462,12 +15610,12 @@
               "gpu": 1.4658129805029452,
               "organizationId": "organizationId",
               "general": true,
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "disk": 5.637376656633329,
               "ref": "daytonaio/sandbox:latest",
               "size": 0.8008281904610115,
               "mem": 5.962133916683182,
-              "lastUsedAt": "2000-01-23T04:56:07.000Z",
+              "lastUsedAt": "2000-01-23T04:56:07.000+00:00",
               "entrypoint": [
                 "entrypoint",
                 "entrypoint"
@@ -15479,7 +15627,7 @@
               "state": "",
               "initialRunnerId": "runner123",
               "gpuType": "H100",
-              "updatedAt": "2000-01-23T04:56:07.000Z",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00",
               "sandboxClass": "linux-vm"
             }
           ]
@@ -15654,7 +15802,7 @@
       },
       "Job": {
         "example": {
-          "createdAt": "2024-10-01T12:00:00.000Z",
+          "createdAt": "2024-10-01T12:00:00Z",
           "resourceId": "sandbox123",
           "payload": "payload",
           "errorMessage": "Failed to create sandbox",
@@ -15665,7 +15813,7 @@
           },
           "status": "PENDING",
           "resourceType": "SANDBOX",
-          "updatedAt": "2024-10-01T12:00:00.000Z"
+          "updatedAt": "2024-10-01T12:00:00Z"
         },
         "properties": {
           "id": {
@@ -15725,12 +15873,12 @@
           },
           "createdAt": {
             "description": "The creation timestamp of the job",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           },
           "updatedAt": {
             "description": "The last update timestamp of the job",
-            "example": "2024-10-01T12:00:00.000Z",
+            "example": "2024-10-01T12:00:00Z",
             "type": "string"
           }
         },
@@ -15751,7 +15899,7 @@
           "page": 6,
           "items": [
             {
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "resourceId": "sandbox123",
               "payload": "payload",
               "errorMessage": "Failed to create sandbox",
@@ -15762,10 +15910,10 @@
               },
               "status": "PENDING",
               "resourceType": "SANDBOX",
-              "updatedAt": "2024-10-01T12:00:00.000Z"
+              "updatedAt": "2024-10-01T12:00:00Z"
             },
             {
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "resourceId": "sandbox123",
               "payload": "payload",
               "errorMessage": "Failed to create sandbox",
@@ -15776,7 +15924,7 @@
               },
               "status": "PENDING",
               "resourceType": "SANDBOX",
-              "updatedAt": "2024-10-01T12:00:00.000Z"
+              "updatedAt": "2024-10-01T12:00:00Z"
             }
           ]
         },
@@ -15809,7 +15957,7 @@
         "example": {
           "jobs": [
             {
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "resourceId": "sandbox123",
               "payload": "payload",
               "errorMessage": "Failed to create sandbox",
@@ -15820,10 +15968,10 @@
               },
               "status": "PENDING",
               "resourceType": "SANDBOX",
-              "updatedAt": "2024-10-01T12:00:00.000Z"
+              "updatedAt": "2024-10-01T12:00:00Z"
             },
             {
-              "createdAt": "2024-10-01T12:00:00.000Z",
+              "createdAt": "2024-10-01T12:00:00Z",
               "resourceId": "sandbox123",
               "payload": "payload",
               "errorMessage": "Failed to create sandbox",
@@ -15834,7 +15982,7 @@
               },
               "status": "PENDING",
               "resourceType": "SANDBOX",
-              "updatedAt": "2024-10-01T12:00:00.000Z"
+              "updatedAt": "2024-10-01T12:00:00Z"
             }
           ]
         },
@@ -15849,6 +15997,32 @@
         },
         "required": [
           "jobs"
+        ],
+        "type": "object"
+      },
+      "RegistryMtlsCredentialsDto": {
+        "example": {
+          "certificatePem": "certificatePem",
+          "privateKeyPem": "privateKeyPem",
+          "caBundlePem": "caBundlePem"
+        },
+        "properties": {
+          "certificatePem": {
+            "description": "PEM-encoded client certificate chain",
+            "type": "string"
+          },
+          "privateKeyPem": {
+            "description": "PEM-encoded unencrypted client private key",
+            "type": "string"
+          },
+          "caBundlePem": {
+            "description": "PEM-encoded registry CA bundle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "certificatePem",
+          "privateKeyPem"
         ],
         "type": "object"
       },
@@ -16051,7 +16225,7 @@
       },
       "GpuCapacityResponse": {
         "example": {
-          "observedAt": "2000-01-23T04:56:07.000Z",
+          "observedAt": "2000-01-23T04:56:07.000+00:00",
           "capacity": [
             {
               "availableOnDemand": 0,
@@ -16086,13 +16260,25 @@
       },
       "CreateDockerRegistry": {
         "example": {
+          "mtlsSecretArn": "mtlsSecretArn",
           "password": "password",
           "name": "name",
           "project": "project",
+          "mtlsRoleArn": "mtlsRoleArn",
           "url": "url",
           "username": "username"
         },
         "properties": {
+          "mtlsRoleArn": {
+            "description": "IAM role ARN for registry mTLS; supply with mtlsSecretArn, or set both to null to clear",
+            "nullable": true,
+            "type": "string"
+          },
+          "mtlsSecretArn": {
+            "description": "Secrets Manager ARN for registry mTLS; supply with mtlsRoleArn, or set both to null to clear",
+            "nullable": true,
+            "type": "string"
+          },
           "name": {
             "description": "Registry name",
             "type": "string"
@@ -16124,14 +16310,16 @@
       },
       "DockerRegistry": {
         "example": {
+          "mtlsSecretArn": "mtlsSecretArn",
           "registryType": "internal",
-          "createdAt": "2024-01-31T12:00:00.000Z",
+          "createdAt": "2024-01-31T12:00:00Z",
           "name": "My Docker Hub",
           "project": "my-project",
           "id": "123e4567-e89b-12d3-a456-426614174000",
           "url": "https://registry.hub.docker.com",
+          "mtlsRoleArn": "mtlsRoleArn",
           "username": "username",
-          "updatedAt": "2024-01-31T12:00:00.000Z"
+          "updatedAt": "2024-01-31T12:00:00Z"
         },
         "properties": {
           "id": {
@@ -16154,6 +16342,16 @@
             "example": "username",
             "type": "string"
           },
+          "mtlsRoleArn": {
+            "description": "IAM role ARN for registry mTLS",
+            "nullable": true,
+            "type": "string"
+          },
+          "mtlsSecretArn": {
+            "description": "Secrets Manager ARN for registry mTLS",
+            "nullable": true,
+            "type": "string"
+          },
           "project": {
             "description": "Registry project",
             "example": "my-project",
@@ -16172,13 +16370,13 @@
           },
           "createdAt": {
             "description": "Creation timestamp",
-            "example": "2024-01-31T12:00:00.000Z",
+            "example": "2024-01-31T12:00:00Z",
             "format": "date-time",
             "type": "string"
           },
           "updatedAt": {
             "description": "Last update timestamp",
-            "example": "2024-01-31T12:00:00.000Z",
+            "example": "2024-01-31T12:00:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -16186,6 +16384,8 @@
         "required": [
           "createdAt",
           "id",
+          "mtlsRoleArn",
+          "mtlsSecretArn",
           "name",
           "project",
           "registryType",
@@ -16201,7 +16401,7 @@
           "registryId": "123e4567-e89b-12d3-a456-426614174000",
           "project": "library",
           "secret": "eyJhbGciOiJIUzI1NiIs...",
-          "expiresAt": "2023-12-31T23:59:59.000Z",
+          "expiresAt": "2023-12-31T23:59:59Z",
           "username": "temp-user-123"
         },
         "properties": {
@@ -16232,7 +16432,7 @@
           },
           "expiresAt": {
             "description": "Token expiration time in ISO format",
-            "example": "2023-12-31T23:59:59.000Z",
+            "example": "2023-12-31T23:59:59Z",
             "type": "string"
           }
         },
@@ -16248,13 +16448,25 @@
       },
       "UpdateDockerRegistry": {
         "example": {
+          "mtlsSecretArn": "mtlsSecretArn",
           "password": "password",
           "name": "name",
           "project": "project",
+          "mtlsRoleArn": "mtlsRoleArn",
           "url": "url",
           "username": "username"
         },
         "properties": {
+          "mtlsRoleArn": {
+            "description": "IAM role ARN for registry mTLS; supply with mtlsSecretArn, or set both to null to clear",
+            "nullable": true,
+            "type": "string"
+          },
+          "mtlsSecretArn": {
+            "description": "Secrets Manager ARN for registry mTLS; supply with mtlsRoleArn, or set both to null to clear",
+            "nullable": true,
+            "type": "string"
+          },
           "name": {
             "description": "Registry name",
             "type": "string"
@@ -16325,7 +16537,7 @@
       },
       "Secret": {
         "example": {
-          "createdAt": "2024-01-31T12:00:00.000Z",
+          "createdAt": "2024-01-31T12:00:00Z",
           "hosts": [
             "api.anthropic.com"
           ],
@@ -16333,7 +16545,7 @@
           "description": "API key for external service",
           "id": "123e4567-e89b-12d3-a456-426614174000",
           "placeholder": "dtn_secret_a7f3b2c1e9d4f6g8",
-          "updatedAt": "2024-01-31T12:00:00.000Z"
+          "updatedAt": "2024-01-31T12:00:00Z"
         },
         "properties": {
           "id": {
@@ -16353,7 +16565,7 @@
           },
           "createdAt": {
             "description": "Creation timestamp",
-            "example": "2024-01-31T12:00:00.000Z",
+            "example": "2024-01-31T12:00:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -16374,7 +16586,7 @@
           },
           "updatedAt": {
             "description": "Last update timestamp",
-            "example": "2024-01-31T12:00:00.000Z",
+            "example": "2024-01-31T12:00:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -16395,7 +16607,7 @@
           "total": 0,
           "items": [
             {
-              "createdAt": "2024-01-31T12:00:00.000Z",
+              "createdAt": "2024-01-31T12:00:00Z",
               "hosts": [
                 "api.anthropic.com"
               ],
@@ -16403,10 +16615,10 @@
               "description": "API key for external service",
               "id": "123e4567-e89b-12d3-a456-426614174000",
               "placeholder": "dtn_secret_a7f3b2c1e9d4f6g8",
-              "updatedAt": "2024-01-31T12:00:00.000Z"
+              "updatedAt": "2024-01-31T12:00:00Z"
             },
             {
-              "createdAt": "2024-01-31T12:00:00.000Z",
+              "createdAt": "2024-01-31T12:00:00Z",
               "hosts": [
                 "api.anthropic.com"
               ],
@@ -16414,7 +16626,7 @@
               "description": "API key for external service",
               "id": "123e4567-e89b-12d3-a456-426614174000",
               "placeholder": "dtn_secret_a7f3b2c1e9d4f6g8",
-              "updatedAt": "2024-01-31T12:00:00.000Z"
+              "updatedAt": "2024-01-31T12:00:00Z"
             }
           ]
         },
@@ -16701,7 +16913,7 @@
           "userAgent": "userAgent",
           "source": "source",
           "organizationId": "organizationId",
-          "createdAt": "2000-01-23T04:56:07.000Z",
+          "createdAt": "2000-01-23T04:56:07.000+00:00",
           "actorId": "actorId",
           "action": "action",
           "id": "id",
@@ -16789,7 +17001,7 @@
               "userAgent": "userAgent",
               "source": "source",
               "organizationId": "organizationId",
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "actorId": "actorId",
               "action": "action",
               "id": "id",
@@ -16809,7 +17021,7 @@
               "userAgent": "userAgent",
               "source": "source",
               "organizationId": "organizationId",
-              "createdAt": "2000-01-23T04:56:07.000Z",
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
               "actorId": "actorId",
               "action": "action",
               "id": "id",
@@ -16935,6 +17147,7 @@
                 "update_sso_enabled",
                 "generate_workos_admin_portal_link",
                 "update_scim_enabled",
+                "mirror_from_workos",
                 "update_otel_config",
                 "delete_otel_config",
                 "update_default_queue_timeout",
@@ -17494,7 +17707,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17527,7 +17740,7 @@
           },
           "createdAt": {
             "description": "When the sandbox was created",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17556,7 +17769,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17588,7 +17801,7 @@
           },
           "updatedAt": {
             "description": "When the sandbox was last updated",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17617,7 +17830,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17646,7 +17859,7 @@
           },
           "createdAt": {
             "description": "When the snapshot was created",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17675,7 +17888,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17712,7 +17925,7 @@
           },
           "updatedAt": {
             "description": "When the snapshot was last updated",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17742,7 +17955,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17763,7 +17976,7 @@
           },
           "removedAt": {
             "description": "When the snapshot was removed",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17791,7 +18004,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17820,7 +18033,7 @@
           },
           "createdAt": {
             "description": "When the volume was created",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
@@ -17849,7 +18062,7 @@
           },
           "timestamp": {
             "description": "Timestamp when the event occurred",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           },
@@ -17886,7 +18099,7 @@
           },
           "updatedAt": {
             "description": "When the volume was last updated",
-            "example": "2025-12-19T10:30:00.000Z",
+            "example": "2025-12-19T10:30:00Z",
             "format": "date-time",
             "type": "string"
           }
