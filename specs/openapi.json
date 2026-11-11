@@ -2724,6 +2724,47 @@
         ]
       }
     },
+    "/users/me/support-contacts": {
+      "post": {
+        "description": "Called by the dashboard when the blocked screen user clicks a support channel. Recorded as a product analytics event that carries nothing about the refusal itself.",
+        "operationId": "recordSupportContact",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportContact"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Support contact recorded"
+          },
+          "403": {
+            "description": "The caller was admitted by the email access gate, so it cannot have seen the blocked screen"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "oauth2": [
+              "openid",
+              "profile",
+              "email"
+            ]
+          }
+        ],
+        "summary": "Record that a user refused by the email access gate reached for support",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/users/privacy-policies/accept": {
       "post": {
         "operationId": "acceptPrivacyPolicies",
@@ -9389,6 +9430,17 @@
               "$ref": "#/components/schemas/DateFilter"
             },
             "style": "form"
+          },
+          {
+            "description": "Filter by the partner application that obtained the actor token.",
+            "explode": true,
+            "in": "query",
+            "name": "actorPartner",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/StringFilter"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -10977,6 +11029,7 @@
           "suspensionReason": "suspensionReason",
           "sandboxLifecycleRateLimit": 4.145608029883936,
           "suspendedAt": "2000-01-23T04:56:07.000+00:00",
+          "zeroDataRetention": true,
           "personal": true,
           "suspensionCleanupGracePeriodHours": 0.8008281904610115,
           "maxSecretsPerSandbox": 2.3021358869347655,
@@ -11078,6 +11131,10 @@
           },
           "previewWarningEnabled": {
             "description": "Whether the proxy shows the preview URL warning page for this organization",
+            "type": "boolean"
+          },
+          "zeroDataRetention": {
+            "description": "Whether zero data retention is enabled for this organization. Set by Daytona; read-only through the API.",
             "type": "boolean"
           },
           "ssoEnabled": {
@@ -11188,7 +11245,8 @@
           "suspendedUntil",
           "suspensionCleanupGracePeriodHours",
           "suspensionReason",
-          "updatedAt"
+          "updatedAt",
+          "zeroDataRetention"
         ],
         "type": "object"
       },
@@ -11244,6 +11302,7 @@
           "H200",
           "B200",
           "B300",
+          "L40S",
           "RTX-PRO-6000",
           "RTX-4090",
           "RTX-5090",
@@ -11255,6 +11314,7 @@
           "H200",
           "B200",
           "B300",
+          "L40S",
           "RTX_PRO_6000",
           "RTX_4090",
           "RTX_5090",
@@ -12776,6 +12836,26 @@
           "id",
           "name",
           "publicKeys"
+        ],
+        "type": "object"
+      },
+      "SupportContact": {
+        "example": {
+          "channel": "pylon"
+        },
+        "properties": {
+          "channel": {
+            "description": "How the user reached for support: the Pylon chat, the Slack link or the support mailto",
+            "enum": [
+              "pylon",
+              "slack",
+              "email"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel"
         ],
         "type": "object"
       },
@@ -14605,6 +14685,7 @@
           "currentAllocatedCpu": 4000,
           "updatedAt": "2023-10-01T12:00:00Z",
           "proxyUrl": "https://proxy.runner1.example.com",
+          "sshGatewayUrl": "ssh://runner1.example.com:2220",
           "cpu": 8,
           "gpu": 1,
           "currentSnapshotCount": 12,
@@ -14639,6 +14720,11 @@
           "proxyUrl": {
             "description": "The proxy URL of the runner",
             "example": "https://proxy.runner1.example.com",
+            "type": "string"
+          },
+          "sshGatewayUrl": {
+            "description": "The address of the runner SSH gateway; unset means the runner domain on the default port (2220)",
+            "example": "ssh://runner1.example.com:2220",
             "type": "string"
           },
           "cpu": {
@@ -14889,6 +14975,7 @@
           "currentAllocatedCpu": 4000,
           "updatedAt": "2023-10-01T12:00:00Z",
           "proxyUrl": "https://proxy.runner1.example.com",
+          "sshGatewayUrl": "ssh://runner1.example.com:2220",
           "cpu": 8,
           "gpu": 1,
           "currentSnapshotCount": 12,
@@ -14923,6 +15010,11 @@
           "proxyUrl": {
             "description": "The proxy URL of the runner",
             "example": "https://proxy.runner1.example.com",
+            "type": "string"
+          },
+          "sshGatewayUrl": {
+            "description": "The address of the runner SSH gateway; unset means the runner domain on the default port (2220)",
+            "example": "ssh://runner1.example.com:2220",
             "type": "string"
           },
           "cpu": {
@@ -15242,6 +15334,7 @@
               "serviceName": "runner"
             }
           ],
+          "sshGatewayUrl": "ssh://runner-123.daytona.example.com:2220",
           "metrics": ""
         },
         "properties": {
@@ -15273,6 +15366,11 @@
           "apiUrl": {
             "description": "Runner API URL",
             "example": "http://api.daytona.example.com:8080",
+            "type": "string"
+          },
+          "sshGatewayUrl": {
+            "description": "Address the SSH gateway dials to reach the runner SSH gateway",
+            "example": "ssh://runner-123.daytona.example.com:2220",
             "type": "string"
           },
           "appVersion": {
@@ -16190,9 +16288,52 @@
         ],
         "type": "object"
       },
+      "GpuSandboxCapacity": {
+        "example": {
+          "onDemand": 0,
+          "spot": 0,
+          "gpuCount": 2
+        },
+        "properties": {
+          "gpuCount": {
+            "description": "GPU units per sandbox.",
+            "maximum": 8,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "onDemand": {
+            "description": "Estimated number of on-demand sandboxes that fit at observation time, including immediately reclaimable spot capacity.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "spot": {
+            "description": "Estimated number of spot sandboxes that fit in free capacity at observation time.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "gpuCount",
+          "onDemand",
+          "spot"
+        ],
+        "type": "object"
+      },
       "GpuCapacity": {
         "example": {
           "availableOnDemand": 0,
+          "availableSandboxes": [
+            {
+              "onDemand": 0,
+              "spot": 0,
+              "gpuCount": 2
+            },
+            {
+              "onDemand": 0,
+              "spot": 0,
+              "gpuCount": 2
+            }
+          ],
           "gpuType": "H100",
           "availableSpot": 0
         },
@@ -16214,10 +16355,18 @@
             "description": "GPU units currently free for spot placement across schedulable runners.",
             "minimum": 0,
             "type": "integer"
+          },
+          "availableSandboxes": {
+            "description": "Observed estimates of sandbox counts for each supported GPU count, ordered ascending and including zero counts. Each sandbox must fit on one runner. Sizes and purchase types are alternative uses of the same capacity; counts must not be added together. Capacity is not reserved; sandbox creation remains authoritative.",
+            "items": {
+              "$ref": "#/components/schemas/GpuSandboxCapacity"
+            },
+            "type": "array"
           }
         },
         "required": [
           "availableOnDemand",
+          "availableSandboxes",
           "availableSpot",
           "gpuType"
         ],
@@ -16229,11 +16378,35 @@
           "capacity": [
             {
               "availableOnDemand": 0,
+              "availableSandboxes": [
+                {
+                  "onDemand": 0,
+                  "spot": 0,
+                  "gpuCount": 2
+                },
+                {
+                  "onDemand": 0,
+                  "spot": 0,
+                  "gpuCount": 2
+                }
+              ],
               "gpuType": "H100",
               "availableSpot": 0
             },
             {
               "availableOnDemand": 0,
+              "availableSandboxes": [
+                {
+                  "onDemand": 0,
+                  "spot": 0,
+                  "gpuCount": 2
+                },
+                {
+                  "onDemand": 0,
+                  "spot": 0,
+                  "gpuCount": 2
+                }
+              ],
               "gpuType": "H100",
               "availableSpot": 0
             }
@@ -16917,6 +17090,7 @@
           "actorId": "actorId",
           "action": "action",
           "id": "id",
+          "actorPartner": "actorPartner",
           "actorApiKeySuffix": "actorApiKeySuffix",
           "statusCode": 0.8008281904610115
         },
@@ -16934,6 +17108,10 @@
             "type": "string"
           },
           "actorApiKeySuffix": {
+            "type": "string"
+          },
+          "actorPartner": {
+            "description": "Partner application that obtained the actor token, by its configured name",
             "type": "string"
           },
           "organizationId": {
@@ -17005,6 +17183,7 @@
               "actorId": "actorId",
               "action": "action",
               "id": "id",
+              "actorPartner": "actorPartner",
               "actorApiKeySuffix": "actorApiKeySuffix",
               "statusCode": 0.8008281904610115
             },
@@ -17025,6 +17204,7 @@
               "actorId": "actorId",
               "action": "action",
               "id": "id",
+              "actorPartner": "actorPartner",
               "actorApiKeySuffix": "actorApiKeySuffix",
               "statusCode": 0.8008281904610115
             }
@@ -17154,6 +17334,7 @@
                 "create_ssh_access",
                 "revoke_ssh_access",
                 "recover",
+                "create_registry_push_access",
                 "regenerate_proxy_api_key",
                 "regenerate_ssh_gateway_api_key",
                 "regenerate_snapshot_manager_credentials",
