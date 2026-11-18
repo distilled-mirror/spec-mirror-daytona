@@ -998,6 +998,41 @@
         ]
       }
     },
+    "/organizations/sandbox-telemetry/disabled-organization-ids": {
+      "get": {
+        "description": "Used by the OTEL collector's store pipeline to drop these organizations' records before ClickHouse. Read from the database on every call; the collector polls it.",
+        "operationId": "getTelemetryDisabledOrganizationIds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryDisabledOrganizations"
+                }
+              }
+            },
+            "description": "Telemetry-disabled organization IDs"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "oauth2": [
+              "openid",
+              "profile",
+              "email"
+            ]
+          }
+        ],
+        "summary": "List organizations whose sandbox telemetry must not be stored",
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
     "/organizations/{organizationId}/otel-config": {
       "delete": {
         "operationId": "deleteOrganizationOtelConfig",
@@ -11579,6 +11614,27 @@
         "required": [
           "organizationId",
           "sandboxId"
+        ],
+        "type": "object"
+      },
+      "TelemetryDisabledOrganizations": {
+        "example": {
+          "organizationIds": [
+            "organizationIds",
+            "organizationIds"
+          ]
+        },
+        "properties": {
+          "organizationIds": {
+            "description": "IDs of organizations whose sandbox telemetry must not be stored (zero data retention or telemetry turned off)",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "organizationIds"
         ],
         "type": "object"
       },
